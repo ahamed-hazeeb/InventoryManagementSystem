@@ -1,0 +1,50 @@
+﻿@model IEnumerable<InventoryManagementSystem.Models.Order>
+
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<h1>Orders</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+</p>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.OrderDate)</th>
+            <th>@Html.DisplayNameFor(model => model.Status)</th>
+            <th>Items</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => order.OrderDate)</td>
+                <td>@Html.DisplayFor(modelItem => order.Status)</td>
+                <td>
+                    @if (order.OrderItems != null && order.OrderItems.Any())
+                    {
+                        <ul>
+                            @foreach (var orderItem in order.OrderItems)
+                            {
+                                <li>@orderItem.InventoryItem?.Name (Qty: @orderItem.Quantity)</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <span>No items</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@order.Id" class="btn btn-sm btn-primary">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-info">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@order.Id" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
