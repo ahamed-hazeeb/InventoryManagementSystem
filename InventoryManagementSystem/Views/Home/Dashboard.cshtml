@@ -1,0 +1,45 @@
+﻿@model InventoryManagementSystem.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1>Inventory Dashboard</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Items</h5>
+                <p class="card-text">@Model.TotalItems</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Low Stock Items</h5>
+                <p class="card-text">@Model.LowStockItems</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>Recent Orders</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Order Date</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in Model.RecentOrders)
+        {
+            <tr>
+                <td>@order.OrderDate.ToShortDateString()</td>
+                <td>@order.Status</td>
+            </tr>
+        }
+    </tbody>
+</table>

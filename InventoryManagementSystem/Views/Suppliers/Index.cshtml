@@ -1,0 +1,50 @@
+﻿@model IEnumerable<InventoryManagementSystem.Models.Supplier>
+
+@{
+    ViewData["Title"] = "Suppliers";
+}
+
+<h1>Suppliers</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+</p>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Name)</th>
+            <th>@Html.DisplayNameFor(model => model.ContactInfo)</th>
+            <th>Items Supplied</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var supplier in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => supplier.Name)</td>
+                <td>@Html.DisplayFor(modelItem => supplier.ContactInfo)</td>
+                <td>
+                    @if (supplier.Items != null && supplier.Items.Any())
+                    {
+                        <ul>
+                            @foreach (var item in supplier.Items)
+                            {
+                                <li>@item.Name</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <span>No items</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@supplier.Id" class="btn btn-sm btn-primary">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@supplier.Id" class="btn btn-sm btn-info">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@supplier.Id" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,48 @@
+﻿@model InventoryManagementSystem.Models.Supplier
+
+@{
+    ViewData["Title"] = "Supplier Details";
+}
+
+<h1>Supplier Details</h1>
+
+<div>
+    <h4>Supplier</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.ContactInfo)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.ContactInfo)
+        </dd>
+        <dt class="col-sm-2">
+            Items Supplied
+        </dt>
+        <dd class="col-sm-10">
+            @if (Model.Items != null && Model.Items.Any())
+            {
+                <ul>
+                    @foreach (var item in Model.Items)
+                    {
+                        <li>@item.Name</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <span>No items</span>
+            }
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-primary">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
