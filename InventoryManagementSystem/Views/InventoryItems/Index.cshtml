@@ -6,11 +6,17 @@
 
 <h1>Inventory Items</h1>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
-</p>
-<table class="table table-striped">
-    <thead>
+<div class="row mb-3">
+    <div class="col-md-6">
+        <a asp-action="Create" class="btn btn-primary"><i class="fas fa-plus"></i> Create New</a>
+    </div>
+    <div class="col-md-6">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search items by name or description...">
+    </div>
+</div>
+
+<table id="inventoryTable" class="table table-striped table-hover" style="width:100%;">
+    <thead class="table-dark">
         <tr>
             <th>@Html.DisplayNameFor(model => model.Name)</th>
             <th>@Html.DisplayNameFor(model => model.Description)</th>
@@ -23,18 +29,55 @@
     <tbody>
         @foreach (var item in Model)
         {
-            <tr>
+            <tr class="@(item.Quantity < 5 ? "table-warning" : "")">
                 <td>@Html.DisplayFor(modelItem => item.Name)</td>
                 <td>@Html.DisplayFor(modelItem => item.Description)</td>
-                <td>@Html.DisplayFor(modelItem => item.Quantity)</td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Quantity)
+                    @if (item.Quantity < 5)
+                    {
+                        <span class="badge bg-danger ms-2">Low Stock</span>
+                    }
+                </td>
                 <td>@Html.DisplayFor(modelItem => item.Price)</td>
                 <td>@Html.DisplayFor(modelItem => item.Supplier.Name)</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary" title="Edit"><i class="fas fa-edit"></i></a>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info" title="Details"><i class="fas fa-info-circle"></i></a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger" title="Delete"><i class="fas fa-trash"></i></a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTables
+            $('#inventoryTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                searching: false, // We'll use custom search
+                ordering: true,
+                order: [[2, 'desc']], // Sort by Quantity descending
+                columnDefs: [
+                    { orderable: false, targets: 5 } // Disable sorting on Actions
+                ]
+            });
+
+            // Custom search filter
+            $('#searchInput').on('input', function () {
+                var searchText = $(this).val().toLowerCase();
+                $('#inventoryTable tbody tr').each(function () {
+                    var name = $(this).find('td:eq(0)').text().toLowerCase();
+                    var description = $(this).find('td:eq(1)').text().toLowerCase();
+                    $(this).toggle(name.includes(searchText) || description.includes(searchText));
+                });
+            });
+        });
+    </script>
+}

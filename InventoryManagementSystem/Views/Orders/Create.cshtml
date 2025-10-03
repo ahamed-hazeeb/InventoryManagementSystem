@@ -8,15 +8,15 @@
 
 <hr />
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="OrderDate" class="control-label"></label>
                 <input asp-for="OrderDate" class="form-control" type="datetime-local" />
                 <span asp-validation-for="OrderDate" class="text-danger"></span>
             </div>
-            <div class="form-group">
+            <div class="form-group mb-3">
                 <label asp-for="Status" class="control-label"></label>
                 <select asp-for="Status" class="form-control">
                     <option value="Pending">Pending</option>
@@ -25,19 +25,66 @@
                 </select>
                 <span asp-validation-for="Status" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label>Select Items</label>
-                <select name="InventoryItemIds" multiple class="form-control" asp-items="ViewBag.InventoryItems"></select>
-                <span class="text-muted">Hold Ctrl to select multiple items</span>
-            </div>
-            <div class="form-group">
-                <label>Quantities (comma-separated, matching selected items)</label>
-                <input name="Quantities" class="form-control" placeholder="e.g., 2,3" />
+            <div class="form-group mb-3">
+                <label>Selected Items</label>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#itemModal">
+                    Add Item
+                </button>
+                <table id="selectedItemsTable" class="table table-striped mt-3" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Quantity</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="selectedItemsBody"></tbody>
+                </table>
             </div>
             <div class="form-group mt-3">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal for Item Selection -->
+<div class="modal fade" id="itemModal" tabindex="-1" aria-labelledby="itemModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="itemModalLabel">Select Inventory Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="itemSearch" class="form-control mb-3" placeholder="Search items...">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Available Quantity</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemTableBody">
+                        @foreach (var item in (SelectList)ViewBag.InventoryItems)
+                        {
+                            var inventoryItem = await ViewContext.HttpContext.RequestServices.GetService<InventoryManagementSystem.Data.InventoryContext>().InventoryItems.FindAsync(int.Parse(item.Value));
+                            <tr class="item-row" data-item-id="@item.Value" data-item-name="@item.Text" data-item-quantity="@inventoryItem.Quantity">
+                                <td>@item.Text</td>
+                                <td>@inventoryItem.Quantity</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-primary select-item">Select</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -49,4 +96,71 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Search filter for items in modal
+            $('#itemSearch').on('input', function () {
+                var searchText = $(this).val().toLowerCase();
+                $('#itemTableBody tr').each(function () {
+                    var itemName = $(this).find('td:first').text().toLowerCase();
+                    $(this).toggle(itemName.includes(searchText));
+                });
+            });
+
+            // Handle item selection
+            $('.select-item').click(function () {
+                var row = $(this).closest('tr');
+                var itemId = row.data('item-id');
+                var itemName = row.data('item-name');
+                var availableQuantity = parseInt(row.data('item-quantity'));
+
+                // Check if item is already added
+                if ($(`#selectedItemsBody input[name='InventoryItemIds'][value='${itemId}']`).length > 0) {
+                    alert('Item already added.');
+                    return;
+                }
+
+                // Add to selected items table
+                var rowHtml = `
+                    <tr data-item-id="${itemId}">
+                        <td>${itemName}</td>
+                        <td>
+                            <input type="number" name="Quantities" class="form-control quantity-input" min="1" max="${availableQuantity}" value="1" required />
+                            <input type="hidden" name="InventoryItemIds" value="${itemId}" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-danger remove-item">Remove</button>
+                        </td>
+                    </tr>`;
+                $('#selectedItemsBody').append(rowHtml);
+                $('#selectedItemsTable').show();
+                $('#itemModal').modal('hide');
+            });
+
+            // Handle item removal
+            $(document).on('click', '.remove-item', function () {
+                $(this).closest('tr').remove();
+                if ($('#selectedItemsBody tr').length === 0) {
+                    $('#selectedItemsTable').hide();
+                }
+            });
+
+            // Validate quantities on form submit
+            $('form').submit(function (e) {
+                var isValid = true;
+                $('#selectedItemsBody .quantity-input').each(function () {
+                    var quantity = parseInt($(this).val());
+                    var maxQuantity = parseInt($(this).attr('max'));
+                    if (quantity <= 0 || quantity > maxQuantity) {
+                        alert(`Quantity for ${$(this).closest('tr').find('td:first').text()} must be between 1 and ${maxQuantity}.`);
+                        isValid = false;
+                    }
+                });
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
 }

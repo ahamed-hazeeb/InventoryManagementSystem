@@ -1,4 +1,5 @@
-﻿@model InventoryManagementSystem.Models.DashboardViewModel
+﻿@using System.Web
+@model InventoryManagementSystem.Models.DashboardViewModel
 
 @{
     ViewData["Title"] = "Dashboard";
@@ -25,10 +26,19 @@
     </div>
 </div>
 
+<h3>Inventory Levels</h3>
+<div class="row">
+    <div class="col-md-8">
+        <canvas id="inventoryChart" style="max-height:400px;"></canvas>
+    </div>
+</div>
+
+
 <h3>Recent Orders</h3>
 <table class="table table-striped">
     <thead>
         <tr>
+            <th>ID</th>
             <th>Order Date</th>
             <th>Status</th>
         </tr>
@@ -37,9 +47,98 @@
         @foreach (var order in Model.RecentOrders)
         {
             <tr>
+                <td>@order.Id</td>
                 <td>@order.OrderDate.ToShortDateString()</td>
                 <td>@order.Status</td>
             </tr>
         }
     </tbody>
 </table>
+
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Prepare data for Chart.js with proper escaping
+        const itemNames = [
+            @foreach (var item in Model.InventoryItems)
+            {
+                    @:"@HttpUtility.JavaScriptStringEncode(item.Name ?? "Unknown")",
+            }
+        ];
+        const itemQuantities = [@string.Join(",", Model.InventoryItems.Select(i => i.Quantity.ToString()))];
+
+        // Log data for debugging
+        console.log('Item Names:', itemNames);
+        console.log('Item Quantities:', itemQuantities);
+
+        // Chart.js configuration
+        const ctx = document.getElementById('inventoryChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: itemNames,
+                datasets: [{
+                    label: 'Stock Quantity',
+                    data: itemQuantities,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.6)', // Blue
+                        'rgba(255, 99, 132, 0.6)', // Red
+                        'rgba(75, 192, 192, 0.6)', // Teal
+                        'rgba(255, 159, 64, 0.6)', // Orange
+                        'rgba(153, 102, 255, 0.6)', // Purple
+                        'rgba(255, 205, 86, 0.6)', // Yellow
+                        'rgba(201, 203, 207, 0.6)', // Grey
+                        'rgba(0, 255, 127, 0.6)', // Green
+                        'rgba(255, 20, 147, 0.6)', // Deep Pink
+                        'rgba(106, 90, 205, 0.6)' // Slate Blue
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 205, 86, 1)',
+                        'rgba(201, 203, 207, 1)',
+                        'rgba(0, 255, 127, 1)',
+                        'rgba(255, 20, 147, 1)',
+                        'rgba(106, 90, 205, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantity'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Item'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Inventory Stock Levels'
+                    }
+                }
+            }
+        });
+    </script>
+}
