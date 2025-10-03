@@ -28,7 +28,8 @@ namespace InventoryManagementSystem.Controllers
             {
                 TotalItems = await _context.InventoryItems.CountAsync(),
                 LowStockItems = await _context.InventoryItems.Where(i => i.Quantity < 5).CountAsync(),
-                RecentOrders = await _context.Orders.OrderByDescending(o => o.OrderDate).Take(5).ToListAsync()
+                RecentOrders = await _context.Orders.OrderByDescending(o => o.OrderDate).Take(5).ToListAsync(),
+                InventoryItems = await _context.InventoryItems.ToListAsync()
             };
             return View(model);
         }
